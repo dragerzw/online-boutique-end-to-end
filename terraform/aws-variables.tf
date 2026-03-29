@@ -9,7 +9,7 @@ variable "memorystore" {
 variable "aws_region" {
   type        = string
   description = "AWS region to deploy resources"
-  default     = "us-west-2"
+  default     = "us-east-1"
 }
 
 variable "cluster_name" {

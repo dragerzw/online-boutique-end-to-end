@@ -44,7 +44,7 @@ module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "~> 20.31"
   cluster_name    = var.cluster_name
-  cluster_version = "1.29"
+  cluster_version = "1.35"
   subnet_ids      = module.vpc.private_subnets
   vpc_id          = module.vpc.vpc_id
   enable_irsa     = true
@@ -126,6 +126,51 @@ resource "helm_release" "prometheus" {
     {
       name  = "grafana.grafana.ini.server.serve_from_sub_path"
       value = "true"
+    }
+  ]
+
+  depends_on = [module.eks]
+}
+
+module "load_balancer_controller_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.39.0"
+
+  role_name                              = "load-balancer-controller"
+  attach_load_balancer_controller_policy = true
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
+    }
+  }
+}
+
+resource "helm_release" "aws_load_balancer_controller" {
+  name             = "aws-load-balancer-controller"
+  repository       = "https://aws.github.io/eks-charts"
+  chart            = "aws-load-balancer-controller"
+  namespace        = "kube-system"
+  create_namespace = true
+  version          = "1.7.2"
+
+  set = [
+    {
+      name  = "clusterName"
+      value = module.eks.cluster_name
+    },
+    {
+      name  = "serviceAccount.create"
+      value = "true"
+    },
+    {
+      name  = "serviceAccount.name"
+      value = "aws-load-balancer-controller"
+    },
+    {
+      name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+      value = module.load_balancer_controller_irsa_role.iam_role_arn
     }
   ]
 
