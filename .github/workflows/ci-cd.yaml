@@ -157,6 +157,7 @@ jobs:
               throw new Error(`ArgoCD sync failed (${res.status}): ${errorText}`);
             }
             console.log('Sync triggered successfully!');
+        # GitOps configuration
         env:
           ARGOCD_SYNC_URL: ${{ secrets.ARGOCD_SYNC_URL }}
           ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
