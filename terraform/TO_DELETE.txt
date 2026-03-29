@@ -1,0 +1,6 @@
+The following Terraform files are GCP-specific and can be deleted after AWS migration is complete:
+- main.tf
+- memorystore.tf
+- output.tf
+- providers.tf
+- variables.tf

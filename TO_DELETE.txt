@@ -1,0 +1,1 @@
+cloudbuild.yaml is no longer needed for AWS/GitHub Actions/ArgoCD workflows and can be safely deleted.

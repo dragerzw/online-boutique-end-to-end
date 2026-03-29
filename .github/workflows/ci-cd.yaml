@@ -1,0 +1,85 @@
+# GitHub Actions workflow for building and pushing all microservice images, then notifying ArgoCD
+# Best practices: matrix builds, caching, OIDC for AWS, and ArgoCD sync trigger
+
+name: CI/CD Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
+      - 'Dockerfile'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - adservice
+          - cartservice
+          - checkoutservice
+          - currencyservice
+          - emailservice
+          - frontend
+          - loadgenerator
+          - paymentservice
+          - productcatalogservice
+          - recommendationservice
+          - shippingservice
+          - shoppingassistantservice
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: src/${{ matrix.service }}
+          push: true
+          tags: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  argocd-sync:
+    name: Trigger ArgoCD Sync
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger ArgoCD App Sync
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fetch = require('node-fetch');
+            const res = await fetch(process.env.ARGOCD_SYNC_URL, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.ARGOCD_TOKEN}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ app: process.env.ARGOCD_APP_NAME })
+            });
+            if (!res.ok) throw new Error(`ArgoCD sync failed: ${res.statusText}`);
+        env:
+          ARGOCD_SYNC_URL: ${{ secrets.ARGOCD_SYNC_URL }}
+          ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
+          ARGOCD_APP_NAME: online-boutique

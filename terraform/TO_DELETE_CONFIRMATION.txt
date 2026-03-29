@@ -1,0 +1,1 @@
+Deleting main.tf, memorystore.tf, output.tf, providers.tf, variables.tf as part of AWS migration.

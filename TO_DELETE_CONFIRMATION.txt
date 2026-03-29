@@ -1,0 +1,1 @@
+Deleting cloudbuild.yaml and GCP-specific Terraform files as requested.
