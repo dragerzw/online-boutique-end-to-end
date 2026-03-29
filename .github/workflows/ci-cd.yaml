@@ -139,8 +139,9 @@ jobs:
             // Bypassing self-signed cert check for internal/NLB endpoint
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
             
-            // Using the root API path as confirmed via testing (rootpath prefix doesn't apply to REST API)
-            const baseUrl = process.env.ARGOCD_SYNC_URL.replace(/\/$/, "");
+            // Strip any path (e.g. /argocd) from the URL — the REST API is always at the host root
+            const rawUrl = new URL(process.env.ARGOCD_SYNC_URL);
+            const baseUrl = `${rawUrl.protocol}//${rawUrl.host}`;
             const url = `${baseUrl}/api/v1/applications/${process.env.ARGOCD_APP_NAME}/sync`;
             console.log(`Triggering sync for ${process.env.ARGOCD_APP_NAME} at ${url}`);
             
