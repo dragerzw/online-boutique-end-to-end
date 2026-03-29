@@ -139,7 +139,9 @@ jobs:
             // Bypassing self-signed cert check for internal/NLB endpoint
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
             
-            const url = `${process.env.ARGOCD_SYNC_URL}/api/v1/applications/${process.env.ARGOCD_APP_NAME}/sync`;
+            // Adding the mandatory /argocd prefix if it's missing
+            const baseUrl = process.env.ARGOCD_SYNC_URL.replace(/\/$/, "");
+            const url = `${baseUrl}/argocd/api/v1/applications/${process.env.ARGOCD_APP_NAME}/sync`;
             console.log(`Triggering sync for ${process.env.ARGOCD_APP_NAME} at ${url}`);
             
             const res = await fetch(url, {
