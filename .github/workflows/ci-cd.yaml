@@ -1,7 +1,12 @@
 # GitHub Actions workflow for building and pushing all microservice images, then notifying ArgoCD
-# Best practices: matrix builds, caching, OIDC for AWS, and ArgoCD sync trigger
+# Best practices: matrix builds, caching, OIDC for AWS, Image Scanning, unit testing, and ArgoCD sync trigger
 
 name: CI/CD Build and Deploy
+
+# Concurrency group limits running jobs to the latest commit only per PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   push:
@@ -13,11 +18,50 @@ on:
   pull_request:
     branches: [ main ]
 
+# Required for AWS OIDC authentication
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
+  code-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Go Unit Tests
+        timeout-minutes: 10
+        run: |
+          for SERVICE in "shippingservice" "productcatalogservice"; do
+            echo "testing $SERVICE..."
+            pushd src/$SERVICE
+            go test
+            popd
+          done
+
+      - name: C# Unit Tests
+        timeout-minutes: 10
+        run: |
+          dotnet test src/cartservice/
+
   build-and-push:
     name: Build and Push Images
+    needs: code-tests
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service:
           - adservice
@@ -39,8 +83,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
@@ -50,14 +93,36 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image
+      - name: Build local Docker image
         uses: docker/build-push-action@v5
         with:
           context: src/${{ matrix.service }}
-          push: true
-          tags: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:latest
+          push: false
+          load: true
+          tags: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v5
+        if: success()
+        with:
+          context: src/${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:latest
+          cache-from: type=gha
 
   argocd-sync:
     name: Trigger ArgoCD Sync
@@ -69,7 +134,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const fetch = require('node-fetch');
             const res = await fetch(process.env.ARGOCD_SYNC_URL, {
               method: 'POST',
               headers: {
