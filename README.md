@@ -41,7 +41,7 @@ This project prioritizes a **Security-First** approach:
 
 ---
 
-## 💡 High-Impact Lessons & Challenges
+## 💡 Lessons & Challenges
 
 Building a production-ready EKS environment presented several high-level technical challenges that required a deep-dive into AWS IAM and Kubernetes internals.
 
