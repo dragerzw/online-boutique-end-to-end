@@ -84,6 +84,10 @@ Building a production-ready EKS environment presented several high-level technic
 **Challenge:** Traditional methods of using long-lived `AWS_ACCESS_KEY_ID` secrets are a major security liability and against AWS Best Practices.
 **Resolution:** Optimized the pipeline to use **GitHub OIDC Identity Federation**. By creating an IAM Role with a trust relationship to the GitHub OIDC provider, we transitioned to a "zero-secret" architecture for AWS authentication.
 
+### 4. ArgoCD Path-Based Routing vs REST API
+**Challenge:** After configuring ArgoCD with a `/argocd` UI rootpath and storing the full URL as a GitHub Secret, the CI/CD pipeline's automated sync trigger returned persistent `404 Not Found` errors — despite the application existing in the cluster.
+**Resolution:** Discovered that while ArgoCD serves its **UI** under a configurable rootpath prefix, the **gRPC/REST API** is always served at the host root (`/api/v1/...`). Updated the pipeline to programmatically strip any path from the base URL before constructing the API endpoint, making the integration resilient to secret value variations.
+
 ---
 
 ## 🚀 Quick Start (EKS)
@@ -111,7 +115,11 @@ aws eks update-kubeconfig --region us-east-1 --name online-boutique
 
 ---
 
+## 📖 Further Reading
 
+- [Architecture Deep-Dive](docs/ARCHITECTURE.md) — Infrastructure, security, and CI/CD lifecycle details for senior reviewers.
+- [ArgoCD Application Manifest](argocd/application.yaml) — Declarative GitOps configuration.
+- [Terraform Modules](terraform/) — Full IaC for VPC, EKS, Helm releases, and IRSA.
 
 ---
-*Maintained by Drager Mandiya| Professional DevOps Portfolio*
+*Maintained by Drager Mandiya | Professional DevOps Portfolio*

@@ -59,12 +59,17 @@ Monitoring is centralized using the **Kube-Prometheus-Stack**.
 
 | Service | Language | Core Responsibility |
 | :--- | :--- | :--- |
-| **Frontend** | Go | E-commerce web gateway |
-| **Cart Service** | C# / .NET 10 | Redis-backed shopping cart management |
-| **Checkout** | Go | Order orchestration and payment processing |
+| **Frontend** | Go | E-commerce web gateway, session management |
+| **Cart Service** | C# / .NET 10 | Redis-backed shopping cart (Chiseled image) |
+| **Checkout** | Go | Order orchestration, payment & shipping |
 | **Product Catalog** | Go | Inventory management and product search |
+| **Currency** | Node.js | Real-time currency conversion (ECB rates) |
+| **Payment** | Node.js | Credit card processing (mock) |
+| **Email** | Python | Order confirmation emails (mock) |
+| **Recommendation** | Python | Cart-based product recommendations |
 | **Ad Service** | Java | Context-aware advertisement delivery |
-| **Shipping** | Go | Shipping cost estimation and mock fulfillment |
+| **Shipping** | Go | Shipping cost estimation and fulfillment |
+| **Load Generator** | Python/Locust | Synthetic traffic and load testing |
 
 ---
 *Developed as a showcase of modern Cloud-Native Engineering practices.*
