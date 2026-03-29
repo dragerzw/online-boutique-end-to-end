@@ -98,15 +98,24 @@ resource "helm_release" "argocd" {
   create_namespace = true
   version          = "7.7.0"
 
-  set = [
-    {
-      name  = "server.service.type"
-      value = "LoadBalancer"
-    },
-    {
-      name  = "server.rootpath"
-      value = "/argocd"
-    }
+  values = [
+    yamlencode({
+      server = {
+        service = {
+          type = "LoadBalancer"
+        }
+        rootpath = "/argocd"
+      }
+      configs = {
+        cm = {
+          "accounts.cicd" = "apiKey,login"
+        }
+        rbac = {
+          "policy.default" = "role:readonly"
+          "policy.csv"     = "g, cicd, role:admin"
+        }
+      }
+    })
   ]
 
   depends_on = [module.eks]
