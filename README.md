@@ -54,7 +54,7 @@ This project enforces a **Security-First** and **Zero-Trust** approach at every 
  
 ## 🔄 CI/CD & GitOps Workflow
  
-### CI — Continuous Integration (GitHub Actions)
+### CI - Continuous Integration (GitHub Actions)
 Developers push code → GitHub Actions runs unit tests → Builds Docker images → Scans images with Trivy → Pushes secure images to Amazon ECR.
  
 ### Manifest Sync
