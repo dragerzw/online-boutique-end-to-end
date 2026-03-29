@@ -49,6 +49,9 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   enable_irsa     = true
 
+  # Ensure the cluster API is accessible to Terraform on your machine
+  cluster_endpoint_public_access = true
+
   eks_managed_node_groups = {
     default = {
       min_size       = 1

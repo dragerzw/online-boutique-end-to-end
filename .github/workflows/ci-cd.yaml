@@ -97,8 +97,7 @@ jobs:
       - name: Build local Docker image
         uses: docker/build-push-action@v5
         with:
-          context: src/${{ matrix.service }}
-          file: src/${{ matrix.service }}/${{ matrix.service == 'cartservice' && 'src/Dockerfile' || 'Dockerfile' }}
+          context: src/${{ matrix.service }}${{ matrix.service == 'cartservice' && '/src' || '' }}
           push: false
           load: true
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}
@@ -119,8 +118,7 @@ jobs:
         uses: docker/build-push-action@v5
         if: success()
         with:
-          context: src/${{ matrix.service }}
-          file: src/${{ matrix.service }}/${{ matrix.service == 'cartservice' && 'src/Dockerfile' || 'Dockerfile' }}
+          context: src/${{ matrix.service }}${{ matrix.service == 'cartservice' && '/src' || '' }}
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}
