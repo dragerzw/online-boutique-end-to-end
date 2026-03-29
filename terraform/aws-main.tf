@@ -42,18 +42,18 @@ module "vpc" {
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "20.8.4"
+  version         = "~> 20.31"
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids      = module.vpc.private_subnets
   vpc_id          = module.vpc.vpc_id
   enable_irsa     = true
 
   eks_managed_node_groups = {
     default = {
-      min_size     = 1
-      max_size     = 3
-      desired_size = 2
+      min_size       = 1
+      max_size       = 3
+      desired_size   = 2
       instance_types = ["t3.medium"]
     }
   }
@@ -62,22 +62,24 @@ module "eks" {
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
-}
-
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_name
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_name
+  
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+  }
 }
 
 provider "helm" {
   kubernetes = {
     host                   = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    token                  = data.aws_eks_cluster_auth.cluster.token
+
+    exec = {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    }
   }
 }
 
@@ -90,15 +92,16 @@ resource "helm_release" "argocd" {
   create_namespace = true
   version          = "7.7.0"
 
-  set {
-    name  = "server.service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "server.rootpath"
-    value = "/argocd"
-  }
+  set = [
+    {
+      name  = "server.service.type"
+      value = "ClusterIP"
+    },
+    {
+      name  = "server.rootpath"
+      value = "/argocd"
+    }
+  ]
 
   depends_on = [module.eks]
 }
@@ -111,20 +114,20 @@ resource "helm_release" "prometheus" {
   create_namespace = true
   version          = "67.1.0"
 
-  set {
-    name  = "grafana.service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "grafana.grafana.ini.server.root_url"
-    value = "% (protocol)s://%(domain)s:%(http_port)s/grafana/"
-  }
-
-  set {
-    name  = "grafana.grafana.ini.server.serve_from_sub_path"
-    value = "true"
-  }
+  set = [
+    {
+      name  = "grafana.service.type"
+      value = "ClusterIP"
+    },
+    {
+      name  = "grafana.grafana.ini.server.root_url"
+      value = "% (protocol)s://%(domain)s:%(http_port)s/grafana/"
+    },
+    {
+      name  = "grafana.grafana.ini.server.serve_from_sub_path"
+      value = "true"
+    }
+  ]
 
   depends_on = [module.eks]
 }
