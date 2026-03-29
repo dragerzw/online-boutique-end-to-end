@@ -12,35 +12,8 @@ This repository showcases a professional modernization of the Google **Online Bo
 ## 🏗️ System Architecture
 
 Our architecture leverages **Infrastructure as Code (IaC)** and a **GitOps** model to ensure 100% reproducibility and auditability.
+<img width="1408" height="768" alt="Architecture (2)" src="https://github.com/user-attachments/assets/1de0a970-ffb1-45ab-80cc-927dd0f9d0bc" />
 
-```mermaid
-graph TD
-    subgraph "Development & CI"
-        A[Developer Push] --> B[GitHub Actions]
-        B --> C{Trivy Security Scan}
-        C -- Pass --> D[Docker Buildx]
-        D --> E[Amazon ECR]
-    end
-
-    subgraph "AWS EKS Infrastructure"
-        F[Terraform] --> G[VPC / Core Networking]
-        G --> H[EKS Cluster v1.35]
-        H --> I[Managed Node Groups]
-    end
-
-    subgraph "Continuous Delivery"
-        E --> J[ArgoCD]
-        J --> H
-        K[Helm Charts] --> J
-    end
-
-    subgraph "Observability"
-        H --> L[Prometheus]
-        L --> M[Grafana Dashboards]
-    end
-```
-
----
 
 ## 🛠️ Technical Stack
 
