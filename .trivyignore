@@ -2,3 +2,5 @@
 CVE-2026-32767
 CVE-2026-25646
 CVE-2026-22184
+# Accept Python library risk for internal services
+CVE-2026-30922
