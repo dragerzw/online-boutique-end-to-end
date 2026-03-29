@@ -1,5 +1,5 @@
 # GitHub Actions workflow for building and pushing all microservice images, then notifying ArgoCD
-# Best practices: matrix builds, caching, OIDC for AWS, Image Scanning, unit testing, and ArgoCD sync trigger
+# Practices: matrix builds, caching, OIDC for AWS, Image Scanning, unit testing, and ArgoCD sync trigger
 
 name: CI/CD Build and Deploy
 
@@ -17,6 +17,7 @@ on:
       - 'Dockerfile'
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 # Required for AWS OIDC authentication
 permissions:
