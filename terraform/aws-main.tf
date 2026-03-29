@@ -49,8 +49,11 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   enable_irsa     = true
 
-  # Ensure the cluster API is accessible to Terraform on your machine
+  # Ensure the cluster API is accessible to Terraform
   cluster_endpoint_public_access = true
+
+  # Grant cluster-admin permissions to the IAM identity that creates the cluster
+  enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
     default = {
@@ -98,7 +101,7 @@ resource "helm_release" "argocd" {
   set = [
     {
       name  = "server.service.type"
-      value = "ClusterIP"
+      value = "LoadBalancer"
     },
     {
       name  = "server.rootpath"
