@@ -98,6 +98,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: src/${{ matrix.service }}
+          file: src/${{ matrix.service }}/${{ matrix.service == 'cartservice' && 'src/Dockerfile' || 'Dockerfile' }}
           push: false
           load: true
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}
@@ -119,6 +120,7 @@ jobs:
         if: success()
         with:
           context: src/${{ matrix.service }}
+          file: src/${{ matrix.service }}/${{ matrix.service == 'cartservice' && 'src/Dockerfile' || 'Dockerfile' }}
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}

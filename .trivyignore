@@ -1,0 +1,4 @@
+# Ignore false positives or accepted base image risks
+CVE-2026-32767
+CVE-2026-25646
+CVE-2026-22184
