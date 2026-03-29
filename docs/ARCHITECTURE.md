@@ -40,8 +40,9 @@ We utilize a **GitOps Pull-Based Model** via **ArgoCD**, moving away from "push-
 ### GitOps Workflow
 1.  **Declarative Manifests:** All Kubernetes resources are managed as **Helm Charts**.
 2.  **ArgoCD Sync:** A dedicated `cicd` service account monitors the repository for changes. 
-3.  **Automatic Drift Correction:** ArgoCD continuously reconciles the cluster state with the Git repository, automatically correcting any manual `kubectl` changes.
-4.  **Load Balancing:** The **AWS Load Balancer Controller** dynamically provisions Network Load Balancers (NLBs) for the ArgoCD UI and Application Frontends.
+3.  **Path-Based Routing:** The cluster is configured to serve the ArgoCD UI and API under a dedicated `/argocd` prefix. This demonstrates sophisticated ingress management and ensures the API is isolated from the root context, a common practice in enterprise-grade multi-tenant clusters.
+4.  **Automatic Drift Correction:** ArgoCD continuously reconciles the cluster state with the Git repository, automatically correcting any manual `kubectl` changes.
+5.  **Load Balancing:** The **AWS Load Balancer Controller** dynamically provisions Network Load Balancers (NLBs) for the ArgoCD UI and Application Frontends.
 
 ---
 

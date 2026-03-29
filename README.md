@@ -95,12 +95,17 @@ terraform init
 terraform apply -auto-approve
 ```
 
-### 2. Configure Local Access
+### 2. Bootstrap GitOps (ArgoCD)
+```bash
+kubectl apply -f argocd/application.yaml
+```
+
+### 3. Configure Local Access
 ```bash
 aws eks update-kubeconfig --region us-east-1 --name online-boutique
 ```
 
-### 3. Access Dashboards
+### 4. Access Dashboards
 - **ArgoCD:** Retrieve the NLB URL and admin secret to monitor GitOps synchronization.
 - **Monitoring:** Port-forward the Grafana service to view real-time cluster health.
 
