@@ -2,9 +2,11 @@
 CVE-2026-32767
 CVE-2026-25646
 CVE-2026-22184
+CVE-2026-0861
 
 # Accept Python library risk for internal services
 CVE-2026-30922
+CVE-2025-67221
 
 # Accept Go gRPC library risk for internal services
 CVE-2026-33186
